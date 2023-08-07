@@ -15,12 +15,12 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
-
-## COMPILE
+# # COMPILE
 add_library(
   diffdrive_arduino
   SHARED
@@ -28,8 +28,8 @@ add_library(
 )
 target_compile_features(diffdrive_arduino PUBLIC cxx_std_17)
 target_include_directories(diffdrive_arduino PUBLIC
-$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
-$<INSTALL_INTERFACE:include/diffdrive_arduino>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
+  $<INSTALL_INTERFACE:include/diffdrive_arduino>
 )
 ament_target_dependencies(
   diffdrive_arduino PUBLIC
@@ -69,7 +69,7 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
 endif()
 
-## EXPORTS
+# # EXPORTS
 ament_export_targets(export_diffdrive_arduino HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()
