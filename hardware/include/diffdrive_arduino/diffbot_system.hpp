@@ -41,8 +41,8 @@ namespace diffdrive_arduino
 
     struct Config
     {
-      std::string left_wheel_name = "";
-      std::string right_wheel_name = "";
+      std::string rear_left_wheel_name = "";
+      std::string rear_right_wheel_name = "";
       std::string front_left_wheel_name = "";
       std::string front_right_wheel_name = "";
       float loop_rate = 0.0;
@@ -96,8 +96,8 @@ namespace diffdrive_arduino
   private:
     ArduinoComms comms_;
     Config cfg_;
-    Wheel wheel_l_;
-    Wheel wheel_r_;
+    Wheel wheel_rear_l_;
+    Wheel wheel_rear_r_;
     Wheel wheel_front_l_;
     Wheel wheel_front_r_;
   };

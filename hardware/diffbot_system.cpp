@@ -34,8 +34,8 @@ namespace diffdrive_arduino
       return hardware_interface::CallbackReturn::ERROR;
     }
 
-    cfg_.right_wheel_name = info_.hardware_parameters["rear_right_wheel_name"];
-    cfg_.left_wheel_name = info_.hardware_parameters["rear_left_wheel_name"];
+    cfg_.rear_right_wheel_name = info_.hardware_parameters["rear_right_wheel_name"];
+    cfg_.rear_left_wheel_name = info_.hardware_parameters["rear_left_wheel_name"];
     cfg_.front_right_wheel_name = info_.hardware_parameters["front_right_wheel_name"];
     cfg_.front_left_wheel_name = info_.hardware_parameters["front_left_wheel_name"];
     cfg_.loop_rate = std::stof(info_.hardware_parameters["loop_rate"]);
@@ -55,9 +55,9 @@ namespace diffdrive_arduino
       RCLCPP_INFO(rclcpp::get_logger("DiffDriveArduinoHardware"), "PID values not supplied, using defaults.");
     }
 
-    wheel_l_.setup(cfg_.left_wheel_name, cfg_.enc_counts_per_rev);
+    wheel_rear_l_.setup(cfg_.rear_left_wheel_name, cfg_.enc_counts_per_rev);
     wheel_front_l_.setup(cfg_.front_left_wheel_name, cfg_.enc_counts_per_rev);
-    wheel_r_.setup(cfg_.right_wheel_name, cfg_.enc_counts_per_rev);
+    wheel_rear_r_.setup(cfg_.rear_right_wheel_name, cfg_.enc_counts_per_rev);
     wheel_front_r_.setup(cfg_.front_right_wheel_name, cfg_.enc_counts_per_rev);
 
     for (const hardware_interface::ComponentInfo &joint : info_.joints)
@@ -117,14 +117,14 @@ namespace diffdrive_arduino
     std::vector<hardware_interface::StateInterface> state_interfaces;
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        wheel_l_.name, hardware_interface::HW_IF_POSITION, &wheel_l_.pos));
+        wheel_rear_l_.name, hardware_interface::HW_IF_POSITION, &wheel_rear_l_.pos));
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        wheel_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_l_.vel));
+        wheel_rear_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_rear_l_.vel));
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        wheel_r_.name, hardware_interface::HW_IF_POSITION, &wheel_r_.pos));
+        wheel_rear_r_.name, hardware_interface::HW_IF_POSITION, &wheel_rear_r_.pos));
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        wheel_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_r_.vel));
+        wheel_rear_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_rear_r_.vel));
 
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         wheel_front_l_.name, hardware_interface::HW_IF_POSITION, &wheel_front_l_.pos));
@@ -144,12 +144,12 @@ namespace diffdrive_arduino
     std::vector<hardware_interface::CommandInterface> command_interfaces;
 
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        wheel_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_l_.cmd));
+        wheel_rear_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_rear_l_.cmd));
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         wheel_front_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_front_l_.cmd));
 
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        wheel_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_r_.cmd));
+        wheel_rear_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_rear_r_.cmd));
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         wheel_front_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_front_r_.cmd));
 
@@ -238,9 +238,9 @@ namespace diffdrive_arduino
     // int motor_r_counts_per_loop = wheel_r_.cmd / wheel_r_.rads_per_count / cfg_.loop_rate;
     // comms_.set_motor_values(motor_r_counts_per_loop, motor_l_counts_per_loop);
     double front_right_vel = wheel_front_r_.cmd;
-    double rear_right_vel = wheel_r_.cmd;
-    double rear_left_vel = wheel_l_.cmd;
+    double rear_right_vel = wheel_rear_r_.cmd;
     double front_left_vel = wheel_front_l_.cmd;
+    double rear_left_vel = wheel_rear_l_.cmd;
     char cmd[100];
     sprintf(cmd, "{\"topic\":\"wheel_control\",\"velocity\":[%.2f,%.2f,%.2f,%.2f]}", front_right_vel, rear_right_vel, rear_left_vel, front_left_vel);
     std::string msg = cmd;
