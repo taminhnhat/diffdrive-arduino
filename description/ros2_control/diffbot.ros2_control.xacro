@@ -6,10 +6,10 @@
     <ros2_control name="${name}" type="system">
       <hardware>
         <plugin>diffdrive_arduino/DiffDriveArduinoHardware</plugin>
-        <param name="rear_left_wheel_name">left_wheel_joint</param>
         <param name="front_left_wheel_name">front_left_wheel_joint</param>
-        <param name="rear_right_wheel_name">right_wheel_joint</param>
+        <param name="rear_left_wheel_name">rear_left_wheel_joint</param>
         <param name="front_right_wheel_name">front_right_wheel_joint</param>
+        <param name="rear_right_wheel_name">rear_right_wheel_joint</param>
         <param name="loop_rate">30</param>
         <param name="device">/dev/ttyUSB0</param>
         <param name="baud_rate">115200</param>
@@ -21,7 +21,7 @@
         <param name="pid_o">50</param>
       </hardware>
 
-      <joint name="${prefix}left_wheel_joint">
+      <joint name="${prefix}rear_left_wheel_joint">
         <command_interface name="velocity"/>
         <state_interface name="position"/>
         <state_interface name="velocity"/>
@@ -33,7 +33,7 @@
         <state_interface name="velocity"/>
       </joint>
 
-      <joint name="${prefix}right_wheel_joint">
+      <joint name="${prefix}reare_right_wheel_joint">
         <command_interface name="velocity"/>
         <state_interface name="position"/>
         <state_interface name="velocity"/>
