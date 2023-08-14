@@ -64,6 +64,28 @@ public:
     return serial_conn_.IsOpen();
   }
 
+  std::string read_msg(bool print_output = false)
+  {
+    serial_conn_.Write("4083914178{\"topic\":\"status\"}\r\n");
+    std::string read_str = "";
+    if (serial_conn_.IsDataAvailable())
+    {
+      try
+      {
+        serial_conn_.ReadLine(read_str, '\n');
+        if (print_output)
+        {
+          std::cout << " Status: " << read_str << std::endl;
+        }
+      }
+      catch (const LibSerial::ReadTimeout &)
+      {
+        std::cerr << "The ReadByte() call has timed out." << std::endl;
+      }
+    }
+    return read_str;
+  }
+
   std::string send_msg(const std::string &msg_to_send, bool print_output = false)
   {
     uLong crc = crc32(0L, Z_NULL, 0);
@@ -89,7 +111,7 @@ public:
 
     if (print_output)
     {
-      std::cout << "Sent: " << msg_to_serial << " Recv: " << response << std::endl;
+      std::cout << "Sent: " << msg_to_serial << std::endl;
     }
 
     return response;

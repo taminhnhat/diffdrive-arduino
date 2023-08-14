@@ -205,15 +205,16 @@ namespace diffdrive_arduino
     return hardware_interface::CallbackReturn::SUCCESS;
   }
 
-  hardware_interface::return_type DiffDriveArduinoHardware::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /* period */)
+  hardware_interface::return_type DiffDriveArduinoHardware::read(const rclcpp::Time & /*time*/, const rclcpp::Duration &period)
   {
     if (!comms_.connected())
     {
       return hardware_interface::return_type::ERROR;
     }
+    std::cout << period.seconds() << " ";
+    comms_.read_msg(true);
 
     // comms_.read_encoder_values(wheel_l_.enc, wheel_r_.enc);
-
     // double delta_seconds = period.seconds();
 
     // double pos_prev = wheel_l_.pos;
