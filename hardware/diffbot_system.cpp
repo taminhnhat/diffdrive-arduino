@@ -205,13 +205,13 @@ namespace diffdrive_arduino
     return hardware_interface::CallbackReturn::SUCCESS;
   }
 
-  hardware_interface::return_type DiffDriveArduinoHardware::read(const rclcpp::Time & /*time*/, const rclcpp::Duration &period)
+  hardware_interface::return_type DiffDriveArduinoHardware::read(const rclcpp::Time & /*time*/, const rclcpp::Duration & /* period */)
   {
     if (!comms_.connected())
     {
       return hardware_interface::return_type::ERROR;
     }
-    std::cout << period.seconds() << " ";
+    // std::cout << period.seconds() << " ";
     comms_.read_msg(true);
 
     // comms_.read_encoder_values(wheel_l_.enc, wheel_r_.enc);
@@ -245,7 +245,7 @@ namespace diffdrive_arduino
     char cmd[100];
     sprintf(cmd, "{\"topic\":\"wheel_control\",\"velocity\":[%.2f,%.2f,%.2f,%.2f]}", front_right_vel, rear_right_vel, rear_left_vel, front_left_vel);
     std::string msg = cmd;
-    comms_.send_msg(msg, true);
+    comms_.send_msg(msg, false);
     // comms_.control_cmd_generate(cmd, front_right_vel, rear_right_vel, rear_left_vel, front_left_vel);
     return hardware_interface::return_type::OK;
   }

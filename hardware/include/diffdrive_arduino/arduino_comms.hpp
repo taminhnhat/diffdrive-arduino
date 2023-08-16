@@ -7,6 +7,7 @@
 #include <libserial/SerialPort.h>
 #include <iostream>
 #include <cstring>
+#include <jsoncpp/json/json.h>
 
 #include <zlib.h>
 
@@ -73,10 +74,30 @@ public:
       try
       {
         serial_conn_.ReadLine(read_str, '\n');
+
         if (print_output)
         {
-          std::cout << " Status: " << read_str << std::endl;
+          std::cout << "Status: " << read_str << std::endl;
         }
+        int startIndex = read_str.find('{');
+        int stopIndex = read_str.find('}');
+        std::string str_to_parse = read_str.substr(startIndex, stopIndex - startIndex + 1);
+        std::cout << startIndex << "-" << stopIndex << " Substring: " << str_to_parse << std::endl;
+        Json::Value root;
+        Json::Reader reader;
+        bool parsingSuccessful = reader.parse(str_to_parse, root);
+        if (!parsingSuccessful)
+        {
+          std::cout << "Error parsing the string" << std::endl;
+        }
+        // print velocity
+        // const Json::Value velocity = root["velocity"];
+        // std::cout << "velocity: ";
+        // for (int index = 0; index < velocity.size(); ++index)
+        // {
+        //   std::cout << velocity[index] << "\t";
+        // }
+        // std::cout << std::endl;
       }
       catch (const LibSerial::ReadTimeout &)
       {
