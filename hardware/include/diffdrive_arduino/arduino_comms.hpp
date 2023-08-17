@@ -65,31 +65,33 @@ public:
     return serial_conn_.IsOpen();
   }
 
-  std::string read_msg(bool print_output = false)
+  void read_msg(bool print_output = false)
   {
     serial_conn_.Write("4083914178{\"topic\":\"status\"}\r\n");
-    std::string read_str = "";
     if (serial_conn_.IsDataAvailable())
     {
       try
       {
+        std::string read_str = "";
+        serial_conn_.FlushInputBuffer();
         serial_conn_.ReadLine(read_str, '\n');
 
         if (print_output)
         {
-          std::cout << "Status: " << read_str << std::endl;
         }
+        std::cout << " Status: " << read_str.length() << std::endl;
+        std::cout << read_str;
         int startIndex = read_str.find('{');
         int stopIndex = read_str.find('}');
         std::string str_to_parse = read_str.substr(startIndex, stopIndex - startIndex + 1);
-        std::cout << startIndex << "-" << stopIndex << " Substring: " << str_to_parse << std::endl;
-        Json::Value root;
-        Json::Reader reader;
-        bool parsingSuccessful = reader.parse(str_to_parse, root);
-        if (!parsingSuccessful)
-        {
-          std::cout << "Error parsing the string" << std::endl;
-        }
+        std::cout << "[" << startIndex << ":" << read_str[startIndex] << "]-[" << stopIndex << ":" << read_str[stopIndex] << "] Substring: " << str_to_parse << std::endl;
+        // Json::Value root;
+        // Json::Reader reader;
+        // bool parsingSuccessful = reader.parse(str_to_parse, root);
+        // if (!parsingSuccessful)
+        // {
+        //   std::cout << "Error parsing the string" << std::endl;
+        // }
         // print velocity
         // const Json::Value velocity = root["velocity"];
         // std::cout << "velocity: ";
@@ -104,7 +106,7 @@ public:
         std::cerr << "The ReadByte() call has timed out." << std::endl;
       }
     }
-    return read_str;
+    return;
   }
 
   std::string send_msg(const std::string &msg_to_send, bool print_output = false)
