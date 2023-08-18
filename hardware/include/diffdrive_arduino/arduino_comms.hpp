@@ -53,6 +53,10 @@ public:
     timeout_ms_ = timeout_ms;
     serial_conn_.Open(serial_device);
     serial_conn_.SetBaudRate(convert_baud_rate(baud_rate));
+    serial_conn_.SetCharacterSize(LibSerial::CharacterSize::CHAR_SIZE_8);
+    serial_conn_.SetFlowControl(LibSerial::FlowControl::FLOW_CONTROL_NONE);
+    serial_conn_.SetStopBits(LibSerial::StopBits::STOP_BITS_1);
+    serial_conn_.SetParity(LibSerial::Parity::PARITY_NONE);
   }
 
   void disconnect()
@@ -65,115 +69,78 @@ public:
     return serial_conn_.IsOpen();
   }
 
-  void read_msg(bool print_output = false)
+  bool read_hardware_states(std::string &str_out, bool print_output = false)
   {
-    serial_conn_.Write("4083914178{\"topic\":\"status\"}\r\n");
-    if (serial_conn_.IsDataAvailable())
+    serial_conn_.FlushIOBuffers();
+    std::string read_str = "";
+    serial_conn_.Write("150088878{\"topic\":\"ros2_state\"}\r\n");
+    try
     {
-      try
-      {
-        std::string read_str = "";
-        serial_conn_.FlushInputBuffer();
-        serial_conn_.ReadLine(read_str, '\n');
+      serial_conn_.ReadLine(read_str, '\n', 100);
+    }
+    catch (const LibSerial::ReadTimeout &)
+    {
+      // std::cerr << "The ReadByte() call has timed out." << std::endl;
+      read_str = "------------------- timeout! -----------------------\n";
+    }
+    if (print_output)
+    {
+      std::cout << "<<< " << read_str;
+    }
+    std::size_t startIndex = read_str.find('{');
+    std::size_t stopIndex = read_str.find('}');
 
-        if (print_output)
-        {
-        }
-        std::cout << " Status: " << read_str.length() << std::endl;
-        std::cout << read_str;
-        int startIndex = read_str.find('{');
-        int stopIndex = read_str.find('}');
-        std::string str_to_parse = read_str.substr(startIndex, stopIndex - startIndex + 1);
-        std::cout << "[" << startIndex << ":" << read_str[startIndex] << "]-[" << stopIndex << ":" << read_str[stopIndex] << "] Substring: " << str_to_parse << std::endl;
-        // Json::Value root;
-        // Json::Reader reader;
-        // bool parsingSuccessful = reader.parse(str_to_parse, root);
-        // if (!parsingSuccessful)
-        // {
-        //   std::cout << "Error parsing the string" << std::endl;
-        // }
-        // print velocity
-        // const Json::Value velocity = root["velocity"];
-        // std::cout << "velocity: ";
-        // for (int index = 0; index < velocity.size(); ++index)
-        // {
-        //   std::cout << velocity[index] << "\t";
-        // }
-        // std::cout << std::endl;
-      }
-      catch (const LibSerial::ReadTimeout &)
+    if (startIndex != std::string::npos && stopIndex != std::string::npos)
+    {
+      uLong crc_value = 0;
+      std::string crc_str = read_str.substr(0, startIndex);
+      crc_value = std::stoul(crc_str);
+
+      std::string str_to_parse = read_str.substr(startIndex, stopIndex - startIndex + 1);
+      uLong crc_cal = crc32(0L, Z_NULL, 0);
+
+      std::byte bytes[str_to_parse.length()];
+      std::memcpy(bytes, str_to_parse.data(), str_to_parse.length());
+
+      crc_cal = crc32(crc_cal, (const Bytef *)bytes, sizeof(bytes));
+      if (crc_value == crc_cal)
       {
-        std::cerr << "The ReadByte() call has timed out." << std::endl;
+        str_out = str_to_parse;
+        return true;
       }
     }
-    return;
+    return false;
   }
 
-  std::string send_msg(const std::string &msg_to_send, bool print_output = false)
+  std::string write_hardware_command(const std::string &msg_to_send, bool print_output = false)
   {
-    uLong crc = crc32(0L, Z_NULL, 0);
-    serial_conn_.FlushIOBuffers(); // Just in case
+    uLong crc_cal = crc32(0L, Z_NULL, 0);
 
     std::byte bytes[msg_to_send.length()];
     std::memcpy(bytes, msg_to_send.data(), msg_to_send.length());
 
-    crc = crc32(crc, (const Bytef *)bytes, sizeof(bytes));
-    std::string msg_to_serial = std::to_string(crc) + msg_to_send + "\r\n";
+    crc_cal = crc32(crc_cal, (const Bytef *)bytes, sizeof(bytes));
+    std::string msg_to_serial = std::to_string(crc_cal) + msg_to_send + "\r\n";
+    serial_conn_.FlushOutputBuffer();
     serial_conn_.Write(msg_to_serial);
 
     std::string response = "";
-    // try
-    // {
-    //   // Responses end with \r\n so we will read up to (and including) the \n.
-    //   serial_conn_.ReadLine(response, '\n', timeout_ms_);
-    // }
-    // catch (const LibSerial::ReadTimeout &)
-    // {
-    //   std::cerr << "The ReadByte() call has timed out." << std::endl;
-    // }
+    try
+    {
+      serial_conn_.ReadLine(response, '\n', 100);
+    }
+    catch (const LibSerial::ReadTimeout &)
+    {
+      // std::cerr << "The ReadByte() call has timed out." << std::endl;
+      response = "------------------- timeout! -----------------------\n";
+    }
 
     if (print_output)
     {
-      std::cout << "Sent: " << msg_to_serial << std::endl;
+      std::cout << "<<< " << response;
     }
 
     return response;
-  }
-
-  void send_empty_msg()
-  {
-    std::string response = send_msg("");
-  }
-
-  void control_cmd_generate(char *cmd, double front_right_vel, double rear_right_vel, double rear_left_vel, double front_left_vel)
-  {
-    sprintf(cmd, "{\"topic\":\"wheel_control\",\"velocity\":[%.2f,%.2f,%.2f,%.2f]}\n", front_right_vel, rear_right_vel, rear_left_vel, front_left_vel);
-  }
-
-  void read_encoder_values(int &val_1, int &val_2)
-  {
-    std::string response = send_msg("e");
-
-    std::string delimiter = " ";
-    size_t del_pos = response.find(delimiter);
-    std::string token_1 = response.substr(0, del_pos);
-    std::string token_2 = response.substr(del_pos + delimiter.length());
-
-    val_1 = std::atoi(token_1.c_str());
-    val_2 = std::atoi(token_2.c_str());
-  }
-  void set_motor_values(int val_1, int val_2)
-  {
-    std::stringstream ss;
-    ss << "{\"topic\":\"wheel_control\",\"velocity\":[" << val_1 << "," << val_2 << "]}";
-    send_msg(ss.str());
-  }
-
-  void set_pid_values(int k_p, int k_d, int k_i, int k_o)
-  {
-    std::stringstream ss;
-    ss << "u " << k_p << ":" << k_d << ":" << k_i << ":" << k_o;
-    send_msg(ss.str());
   }
 
 private:

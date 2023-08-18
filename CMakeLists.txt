@@ -20,6 +20,8 @@ foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
 
+set(GCC_COVERAGE_LINK_FLAGS "-ljsoncpp")
+
 # # COMPILE
 add_library(
   diffdrive_arduino
@@ -37,6 +39,8 @@ ament_target_dependencies(
 )
 
 target_link_libraries(diffdrive_arduino PUBLIC serial)
+target_link_libraries(diffdrive_arduino PUBLIC jsoncpp)
+target_link_options(diffdrive_arduino PUBLIC -ljsoncpp)
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.

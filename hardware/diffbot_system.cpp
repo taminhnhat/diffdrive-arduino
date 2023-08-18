@@ -19,6 +19,7 @@
 #include <limits>
 #include <memory>
 #include <vector>
+#include <jsoncpp/json/json.h>
 
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -188,10 +189,6 @@ namespace diffdrive_arduino
     {
       return hardware_interface::CallbackReturn::ERROR;
     }
-    if (cfg_.pid_p > 0)
-    {
-      comms_.set_pid_values(cfg_.pid_p, cfg_.pid_d, cfg_.pid_i, cfg_.pid_o);
-    }
     RCLCPP_INFO(rclcpp::get_logger("DiffDriveArduinoHardware"), "Successfully activated!");
 
     return hardware_interface::CallbackReturn::SUCCESS;
@@ -205,32 +202,49 @@ namespace diffdrive_arduino
     return hardware_interface::CallbackReturn::SUCCESS;
   }
 
-  hardware_interface::return_type DiffDriveArduinoHardware::read(const rclcpp::Time & /*time*/, const rclcpp::Duration &period)
+  hardware_interface::return_type DiffDriveArduinoHardware::read(const rclcpp::Time &time, const rclcpp::Duration & /* period */)
   {
+    std::cout << "read\t" << time.nanoseconds() / 1000 << std::endl;
     if (!comms_.connected())
     {
       return hardware_interface::return_type::ERROR;
     }
-    std::cout << "Check status: " << period.seconds() << std::endl;
-    // if (period.seconds() > 0.2)
-    comms_.read_msg(true);
+    std::string read_str = "";
+    if (!comms_.read_hardware_states(read_str, true))
+      return hardware_interface::return_type::OK;
 
-    // comms_.read_encoder_values(wheel_l_.enc, wheel_r_.enc);
-    // double delta_seconds = period.seconds();
+    Json::Value root;
+    Json::Reader reader;
+    bool parsingSuccessful = reader.parse(read_str, root);
+    if (!parsingSuccessful)
+    {
+      std::cout << "Error parsing the string" << std::endl;
+    }
+    // std::cout << "Parsing completed." << std::endl;
+    // print velocity
+    // const int battery = root["battery"].asDouble();
+    const auto velocity = root["velocity"];
+    const auto position = root["position"];
+    // std::cout << "battery: " << battery << std::endl;
+    // std::cout << "velocity: " << velocity[0] << "\t" << velocity[1] << "\t" << velocity[2] << "\t" << velocity[3] << "\t" << std::endl;
+    // std::cout << "position: " << position[0] << "\t" << position[1] << "\t" << position[2] << "\t" << position[3] << "\t" << std::endl;
 
-    // double pos_prev = wheel_l_.pos;
-    // wheel_l_.pos = wheel_l_.calc_enc_angle();
-    // wheel_l_.vel = (wheel_l_.pos - pos_prev) / delta_seconds;
+    wheel_front_r_.vel = velocity[0].asDouble();
+    wheel_rear_r_.vel = velocity[1].asDouble();
+    wheel_rear_l_.vel = velocity[2].asDouble();
+    wheel_front_l_.vel = velocity[3].asDouble();
 
-    // pos_prev = wheel_r_.pos;
-    // wheel_r_.pos = wheel_r_.calc_enc_angle();
-    // wheel_r_.vel = (wheel_r_.pos - pos_prev) / delta_seconds;
+    wheel_front_r_.pos = position[0].asDouble();
+    wheel_rear_r_.pos = position[1].asDouble();
+    wheel_rear_l_.pos = position[2].asDouble();
+    wheel_front_l_.pos = position[3].asDouble();
 
     return hardware_interface::return_type::OK;
   }
 
-  hardware_interface::return_type diffdrive_arduino ::DiffDriveArduinoHardware::write(const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  hardware_interface::return_type diffdrive_arduino ::DiffDriveArduinoHardware::write(const rclcpp::Time &time, const rclcpp::Duration & /* period */)
   {
+    std::cout << "write\t" << time.nanoseconds() / 1000 << std::endl;
     if (!comms_.connected())
     {
       return hardware_interface::return_type::ERROR;
@@ -244,10 +258,9 @@ namespace diffdrive_arduino
     double front_left_vel = wheel_front_l_.cmd;
     double rear_left_vel = wheel_rear_l_.cmd;
     char cmd[100];
-    sprintf(cmd, "{\"topic\":\"wheel_control\",\"velocity\":[%.2f,%.2f,%.2f,%.2f]}", front_right_vel, rear_right_vel, rear_left_vel, front_left_vel);
+    sprintf(cmd, "{\"topic\":\"ros2_control\",\"velocity\":[%.2f,%.2f,%.2f,%.2f]}", front_right_vel, rear_right_vel, rear_left_vel, front_left_vel);
     std::string msg = cmd;
-    // comms_.send_msg(msg, false);
-    // comms_.control_cmd_generate(cmd, front_right_vel, rear_right_vel, rear_left_vel, front_left_vel);
+    comms_.write_hardware_command(msg, true);
     return hardware_interface::return_type::OK;
   }
 
