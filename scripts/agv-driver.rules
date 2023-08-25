@@ -2,5 +2,5 @@
 # FT232R USB Device
 KERNEL=="ttyUSB*", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", MODE:="0777", SYMLINK+="agv-driver"
 # CP2104 USB Device
-KERNEL=="ttyUSB*", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ATTRS{version}==" 2.00", MODE:="0777", SYMLINK+="cp2104"
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ATTRS{version}==" 2.00", MODE:="0777", SYMLINK+="agv-driver"
 

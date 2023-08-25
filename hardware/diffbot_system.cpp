@@ -244,7 +244,6 @@ namespace diffdrive_arduino
 
   hardware_interface::return_type diffdrive_arduino ::DiffDriveArduinoHardware::write(const rclcpp::Time &time, const rclcpp::Duration & /* period */)
   {
-    std::cout << "write\t" << time.nanoseconds() / 1000 << std::endl;
     if (!comms_.connected())
     {
       return hardware_interface::return_type::ERROR;
