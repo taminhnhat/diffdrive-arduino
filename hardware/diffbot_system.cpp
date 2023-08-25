@@ -202,15 +202,14 @@ namespace diffdrive_arduino
     return hardware_interface::CallbackReturn::SUCCESS;
   }
 
-  hardware_interface::return_type DiffDriveArduinoHardware::read(const rclcpp::Time &time, const rclcpp::Duration & /* period */)
+  hardware_interface::return_type DiffDriveArduinoHardware::read(const rclcpp::Time & /* time */, const rclcpp::Duration & /* period */)
   {
-    std::cout << "read\t" << time.nanoseconds() / 1000 << std::endl;
     if (!comms_.connected())
     {
       return hardware_interface::return_type::ERROR;
     }
     std::string read_str = "";
-    if (!comms_.read_hardware_states(read_str, true))
+    if (!comms_.read_hardware_states(read_str, false))
       return hardware_interface::return_type::OK;
 
     Json::Value root;
@@ -242,7 +241,7 @@ namespace diffdrive_arduino
     return hardware_interface::return_type::OK;
   }
 
-  hardware_interface::return_type diffdrive_arduino ::DiffDriveArduinoHardware::write(const rclcpp::Time &time, const rclcpp::Duration & /* period */)
+  hardware_interface::return_type diffdrive_arduino ::DiffDriveArduinoHardware::write(const rclcpp::Time & /* time */, const rclcpp::Duration & /* period */)
   {
     if (!comms_.connected())
     {
@@ -259,7 +258,7 @@ namespace diffdrive_arduino
     char cmd[100];
     sprintf(cmd, "{\"topic\":\"ros2_control\",\"velocity\":[%.2f,%.2f,%.2f,%.2f]}", front_right_vel, rear_right_vel, rear_left_vel, front_left_vel);
     std::string msg = cmd;
-    comms_.write_hardware_command(msg, true);
+    comms_.write_hardware_command(msg, false);
     return hardware_interface::return_type::OK;
   }
 

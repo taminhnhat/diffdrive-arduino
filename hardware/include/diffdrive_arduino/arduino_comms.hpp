@@ -72,8 +72,9 @@ public:
   bool read_hardware_states(std::string &str_out, bool print_output = false)
   {
     serial_conn_.FlushIOBuffers();
+    std::string send_str = "150088878{\"topic\":\"ros2_state\"}\r\n";
     std::string read_str = "";
-    serial_conn_.Write("150088878{\"topic\":\"ros2_state\"}\r\n");
+    serial_conn_.Write(send_str);
     try
     {
       serial_conn_.ReadLine(read_str, '\n', 100);
@@ -81,10 +82,11 @@ public:
     catch (const LibSerial::ReadTimeout &)
     {
       // std::cerr << "The ReadByte() call has timed out." << std::endl;
-      read_str = "read timeout!\n";
+      // read_str = "read timeout!\n";
     }
     if (print_output)
     {
+      std::cout << ">>> " << send_str;
       std::cout << "<<< " << read_str;
     }
     std::size_t startIndex = read_str.find('{');
@@ -132,12 +134,12 @@ public:
     catch (const LibSerial::ReadTimeout &)
     {
       // std::cerr << "The ReadByte() call has timed out." << std::endl;
-      response = "read timeout!\n";
+      // response = "read timeout!\n";
     }
 
     if (print_output)
     {
-      std::cout << ">>> " << msg_to_send;
+      std::cout << ">>> " << msg_to_serial;
       std::cout << "<<< " << response;
     }
 
