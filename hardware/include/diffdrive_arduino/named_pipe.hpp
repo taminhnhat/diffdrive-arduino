@@ -17,7 +17,6 @@ public:
     NamedPipe(/* args */);
     ~NamedPipe();
     int init();
-    int writePipe(char *, bool);
     int writeLine(std::string, bool);
 };
 
@@ -35,23 +34,10 @@ int NamedPipe::init()
 {
     if (fd == 0)
     {
-        fd = open(fifo_path, O_WRONLY);
+        // fd = open(fifo_path, O_WRONLY);
+        fd = open(fifo_path, O_RDWR);
         std::cout << "pipe " << fd << " opened" << std::endl;
     }
-    // fd = open(fifo_path, O_RDWR);
-    return 1;
-}
-
-int NamedPipe::writePipe(char *arr2, bool printoutput = false)
-{
-    // fd = open(fifo_path, O_RDONLY);
-    // read(fd, arr1, strlen(arr1) + 1);
-    // close(fd);
-    fd = open(fifo_path, O_WRONLY);
-    write(fd, arr2, strlen(arr2) + 1);
-    close(fd);
-    if (printoutput)
-        std::cout << "writed to pipe: " << arr2 << std::endl;
     return 1;
 }
 
@@ -60,8 +46,16 @@ int NamedPipe::writeLine(std::string str, bool printoutput = false)
     this->init();
     std::string write_str = str + '\n';
     char *c = strcpy(new char[write_str.length() + 1], write_str.c_str());
-    write(fd, c, strlen(c) + 1);
+
+    // fd = open(fifo_path, O_RDONLY);
+    // read(fd, arr1, strlen(arr1) + 1);
+    // std::cout << "read pipe: " << arr1;
+    // close(fd);
+    // fd = open(fifo_path, O_WRONLY);
+    int res = write(fd, c, strlen(c) + 1);
+    // close(fd);
     if (printoutput)
-        std::cout << "writed to pipe: " << str << std::endl;
+        std::cout << "writed to pipe: " << str << "result: " << res << std::endl;
+
     return 1;
 }
