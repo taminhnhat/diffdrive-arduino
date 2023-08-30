@@ -220,7 +220,7 @@ namespace diffdrive_arduino
       std::cout << "Error parsing the string" << std::endl;
     }
     // const int battery = root["battery"].asDouble();
-    pipe_.writeLine(read_str);
+    pipe_.writeLine(read_str, true);
     const auto velocity = root["velocity"];
     const auto position = root["position"];
     // std::cout << "battery: " << battery << std::endl;
