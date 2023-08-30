@@ -222,6 +222,7 @@ namespace diffdrive_arduino
     // std::cout << "Parsing completed." << std::endl;
     // print velocity
     // const int battery = root["battery"].asDouble();
+    pipe_.writeLine(read_str);
     const auto velocity = root["velocity"];
     const auto position = root["position"];
     // std::cout << "battery: " << battery << std::endl;

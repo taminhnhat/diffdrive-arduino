@@ -33,6 +33,7 @@
 
 #include "diffdrive_arduino/arduino_comms.hpp"
 #include "diffdrive_arduino/wheel.hpp"
+#include "diffdrive_arduino/named_pipe.hpp"
 
 namespace diffdrive_arduino
 {
@@ -95,6 +96,7 @@ namespace diffdrive_arduino
 
   private:
     ArduinoComms comms_;
+    NamedPipe pipe_;
     Config cfg_;
     Wheel wheel_rear_l_;
     Wheel wheel_rear_r_;
