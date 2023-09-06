@@ -218,14 +218,17 @@ namespace diffdrive_arduino
     if (!parsingSuccessful)
     {
       std::cout << "Error parsing the string" << std::endl;
+      return hardware_interface::return_type::OK;
     }
+
     // const int battery = root["battery"].asDouble();
-    pipe_.writeLine(read_str);
+    if (pipe_.writeLine(read_str, false) == -1)
+    {
+      RCLCPP_WARN(rclcpp::get_logger("DiffDriveArduinoHardware"), "Fail writing to pipe! Closed pipe.");
+      return hardware_interface::return_type::OK;
+    }
     const auto velocity = root["velocity"];
     const auto position = root["position"];
-    // std::cout << "battery: " << battery << std::endl;
-    // std::cout << "velocity: " << velocity[0] << "\t" << velocity[1] << "\t" << velocity[2] << "\t" << velocity[3] << "\t" << std::endl;
-    // std::cout << "position: " << position[0] << "\t" << position[1] << "\t" << position[2] << "\t" << position[3] << "\t" << std::endl;
 
     wheel_front_r_.vel = velocity[0].asDouble();
     wheel_rear_r_.vel = velocity[1].asDouble();
@@ -257,7 +260,8 @@ namespace diffdrive_arduino
     char cmd[100];
     sprintf(cmd, "{\"topic\":\"ros2_control\",\"velocity\":[%.2f,%.2f,%.2f,%.2f]}", front_right_vel, rear_right_vel, rear_left_vel, front_left_vel);
     std::string msg = cmd;
-    comms_.write_hardware_command(msg, false);
+    if (!comms_.write_hardware_command(msg, false))
+      RCLCPP_WARN(rclcpp::get_logger("DiffDriveArduinoHardware"), "Fail writing to serial!");
     return hardware_interface::return_type::OK;
   }
 

@@ -81,16 +81,18 @@ public:
     }
     catch (const LibSerial::ReadTimeout &)
     {
-      // std::cerr << "The ReadByte() call has timed out." << std::endl;
+      std::cerr << "The ReadByte() call has timed out." << std::endl;
       // read_str = "read timeout!\n";
+      return false;
     }
     if (print_output)
     {
-      std::cout << ">>> " << send_str;
-      std::cout << "<<< " << read_str;
+      std::cout << "==> " << send_str;
+      std::cout << "<== " << read_str;
     }
     std::size_t startIndex = read_str.find('{');
     std::size_t stopIndex = read_str.find('}');
+    // std::cout << startIndex << " - " << stopIndex << std::endl;
 
     if (startIndex != std::string::npos && stopIndex != std::string::npos)
     {
@@ -99,22 +101,27 @@ public:
       crc_value = std::stoul(crc_str);
 
       std::string str_to_parse = read_str.substr(startIndex, stopIndex - startIndex + 1);
+      // std::cout << crc_str << " - " << str_to_parse << std::endl;
       uLong crc_cal = crc32(0L, Z_NULL, 0);
 
       std::byte bytes[str_to_parse.length()];
       std::memcpy(bytes, str_to_parse.data(), str_to_parse.length());
 
       crc_cal = crc32(crc_cal, (const Bytef *)bytes, sizeof(bytes));
+      // std::cout << crc_value << " - " << crc_cal << std::endl;
       if (crc_value == crc_cal)
       {
         str_out = str_to_parse;
         return true;
       }
+      else
+        return false;
     }
-    return false;
+    else
+      return false;
   }
 
-  std::string write_hardware_command(const std::string &msg_to_send, bool print_output = false)
+  bool write_hardware_command(const std::string &msg_to_send, bool print_output = false)
   {
     uLong crc_cal = crc32(0L, Z_NULL, 0);
 
@@ -133,17 +140,16 @@ public:
     }
     catch (const LibSerial::ReadTimeout &)
     {
-      // std::cerr << "The ReadByte() call has timed out." << std::endl;
-      // response = "read timeout!\n";
+      std::cerr << "The ReadByte() call has timed out." << std::endl;
     }
 
     if (print_output)
     {
-      std::cout << ">>> " << msg_to_serial;
-      std::cout << "<<< " << response;
+      std::cout << "==> " << msg_to_serial;
+      std::cout << "<== " << response;
     }
 
-    return response;
+    return true;
   }
 
 private:

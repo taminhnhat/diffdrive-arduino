@@ -17,6 +17,7 @@ public:
     NamedPipe(/* args */);
     ~NamedPipe();
     int init();
+    int deinit();
     int writeLine(std::string, bool);
 };
 
@@ -36,8 +37,17 @@ int NamedPipe::init()
     {
         // fd = open(fifo_path, O_WRONLY);
         fd = open(fifo_path, O_RDWR);
+        fcntl(fd, F_SETFL, O_NONBLOCK); // set non blocking mode
         std::cout << "pipe " << fd << " opened" << std::endl;
     }
+    return 1;
+}
+
+int NamedPipe::deinit()
+{
+    close(fd);
+    std::cout << "pipe " << fd << " closed" << std::endl;
+    fd = 0;
     return 1;
 }
 
@@ -47,15 +57,16 @@ int NamedPipe::writeLine(std::string str, bool printoutput = false)
     std::string write_str = str + '\n';
     char *c = strcpy(new char[write_str.length() + 1], write_str.c_str());
 
-    // fd = open(fifo_path, O_RDONLY);
-    // read(fd, arr1, strlen(arr1) + 1);
-    // std::cout << "read pipe: " << arr1;
-    // close(fd);
-    // fd = open(fifo_path, O_WRONLY);
-    int res = write(fd, c, strlen(c) + 1);
-    // close(fd);
-    if (printoutput)
-        std::cout << "writed to pipe: " << str << "result: " << res << std::endl;
-
-    return 1;
+    ssize_t res = write(fd, c, strlen(c) + 1);
+    if (res == -1)
+    {
+        deinit();
+        return -1;
+    }
+    else
+    {
+        if (printoutput)
+            std::cout << "pipe > " << str << "result: " << res << std::endl;
+        return 1;
+    }
 }
