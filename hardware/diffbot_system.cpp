@@ -209,36 +209,40 @@ namespace diffdrive_arduino
       return hardware_interface::return_type::ERROR;
     }
     std::string read_str = "";
-    if (!comms_.read_hardware_states(read_str, false))
-      return hardware_interface::return_type::OK;
-
-    Json::Value root;
-    Json::Reader reader;
-    bool parsingSuccessful = reader.parse(read_str, root);
-    if (!parsingSuccessful)
+    if (comms_.read_hardware_states(read_str, false))
     {
-      std::cout << "Error parsing the string" << std::endl;
-      return hardware_interface::return_type::OK;
-    }
+      Json::Value root;
+      Json::Reader reader;
+      bool parsingSuccessful = reader.parse(read_str, root);
+      if (!parsingSuccessful)
+      {
+        std::cout << "Error parsing the string" << std::endl;
+        return hardware_interface::return_type::OK;
+      }
 
-    // const int battery = root["battery"].asDouble();
-    if (pipe_.writeLine(read_str, false) == -1)
+      // const int battery = root["battery"].asDouble();
+      if (pipe_.writeLine(read_str, false) == -1)
+      {
+        RCLCPP_WARN(rclcpp::get_logger("DiffDriveArduinoHardware"), "Fail writing to pipe! Closed pipe.");
+        return hardware_interface::return_type::OK;
+      }
+      const auto velocity = root["vel"];
+      const auto position = root["pos"];
+
+      wheel_front_r_.vel = velocity[0].asDouble();
+      wheel_rear_r_.vel = velocity[1].asDouble();
+      wheel_rear_l_.vel = velocity[2].asDouble();
+      wheel_front_l_.vel = velocity[3].asDouble();
+
+      wheel_front_r_.pos = position[0].asDouble();
+      wheel_rear_r_.pos = position[1].asDouble();
+      wheel_rear_l_.pos = position[2].asDouble();
+      wheel_front_l_.pos = position[3].asDouble();
+    }
+    else
     {
-      RCLCPP_WARN(rclcpp::get_logger("DiffDriveArduinoHardware"), "Fail writing to pipe! Closed pipe.");
-      return hardware_interface::return_type::OK;
+      RCLCPP_WARN(rclcpp::get_logger("DiffDriveArduinoHardware"), "Fail writing to serial!");
     }
-    const auto velocity = root["velocity"];
-    const auto position = root["position"];
-
-    wheel_front_r_.vel = velocity[0].asDouble();
-    wheel_rear_r_.vel = velocity[1].asDouble();
-    wheel_rear_l_.vel = velocity[2].asDouble();
-    wheel_front_l_.vel = velocity[3].asDouble();
-
-    wheel_front_r_.pos = position[0].asDouble();
-    wheel_rear_r_.pos = position[1].asDouble();
-    wheel_rear_l_.pos = position[2].asDouble();
-    wheel_front_l_.pos = position[3].asDouble();
 
     return hardware_interface::return_type::OK;
   }

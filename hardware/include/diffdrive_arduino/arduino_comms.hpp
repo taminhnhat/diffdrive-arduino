@@ -140,7 +140,8 @@ public:
     }
     catch (const LibSerial::ReadTimeout &)
     {
-      std::cerr << "The ReadByte() call has timed out." << std::endl;
+      // std::cerr << "The ReadByte() call has timed out." << std::endl;
+      return false;
     }
 
     if (print_output)
