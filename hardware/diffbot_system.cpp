@@ -28,12 +28,14 @@ namespace diffdrive_arduino
 {
   hardware_interface::CallbackReturn DiffDriveArduinoHardware::on_init(const hardware_interface::HardwareInfo &info)
   {
-    if (
-        hardware_interface::SystemInterface::on_init(info) !=
-        hardware_interface::CallbackReturn::SUCCESS)
+    if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS)
     {
       return hardware_interface::CallbackReturn::ERROR;
     }
+    // if (hardware_interface::SensorInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS)
+    // {
+    //   return hardware_interface::CallbackReturn::ERROR;
+    // }
 
     cfg_.rear_right_wheel_name = info_.hardware_parameters["rear_right_wheel_name"];
     cfg_.rear_left_wheel_name = info_.hardware_parameters["rear_left_wheel_name"];
@@ -117,25 +119,31 @@ namespace diffdrive_arduino
   {
     std::vector<hardware_interface::StateInterface> state_interfaces;
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        wheel_rear_l_.name, hardware_interface::HW_IF_POSITION, &wheel_rear_l_.pos));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        wheel_rear_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_rear_l_.vel));
-
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        wheel_rear_r_.name, hardware_interface::HW_IF_POSITION, &wheel_rear_r_.pos));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        wheel_rear_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_rear_r_.vel));
-
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        wheel_front_l_.name, hardware_interface::HW_IF_POSITION, &wheel_front_l_.pos));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        wheel_front_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_front_l_.vel));
-
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        wheel_front_r_.name, hardware_interface::HW_IF_POSITION, &wheel_front_r_.pos));
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-        wheel_front_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_front_r_.vel));
+    // rear left wheel
+    state_interfaces.emplace_back(hardware_interface::StateInterface(wheel_rear_l_.name, hardware_interface::HW_IF_POSITION, &wheel_rear_l_.pos));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(wheel_rear_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_rear_l_.vel));
+    // rear right wheel
+    state_interfaces.emplace_back(hardware_interface::StateInterface(wheel_rear_r_.name, hardware_interface::HW_IF_POSITION, &wheel_rear_r_.pos));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(wheel_rear_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_rear_r_.vel));
+    // front left wheel
+    state_interfaces.emplace_back(hardware_interface::StateInterface(wheel_front_l_.name, hardware_interface::HW_IF_POSITION, &wheel_front_l_.pos));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(wheel_front_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_front_l_.vel));
+    // front right wheel
+    state_interfaces.emplace_back(hardware_interface::StateInterface(wheel_front_r_.name, hardware_interface::HW_IF_POSITION, &wheel_front_r_.pos));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(wheel_front_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_front_r_.vel));
+    // assign values to orientation
+    state_interfaces.emplace_back(hardware_interface::StateInterface(sensor_name_, imu_interface_names_[0], &orientation_values_[0]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(sensor_name_, imu_interface_names_[1], &orientation_values_[1]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(sensor_name_, imu_interface_names_[2], &orientation_values_[2]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(sensor_name_, imu_interface_names_[3], &orientation_values_[3]));
+    // assign values to angular velocity
+    state_interfaces.emplace_back(hardware_interface::StateInterface(sensor_name_, imu_interface_names_[4], &angular_velocity_values_[0]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(sensor_name_, imu_interface_names_[5], &angular_velocity_values_[1]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(sensor_name_, imu_interface_names_[6], &angular_velocity_values_[2]));
+    // assign values to linear acceleration
+    state_interfaces.emplace_back(hardware_interface::StateInterface(sensor_name_, imu_interface_names_[7], &linear_acceleration_values_[0]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(sensor_name_, imu_interface_names_[8], &linear_acceleration_values_[1]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(sensor_name_, imu_interface_names_[9], &linear_acceleration_values_[2]));
 
     return state_interfaces;
   }
@@ -144,15 +152,13 @@ namespace diffdrive_arduino
   {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
 
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        wheel_rear_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_rear_l_.cmd));
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        wheel_front_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_front_l_.cmd));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(wheel_rear_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_rear_l_.cmd));
 
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        wheel_rear_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_rear_r_.cmd));
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        wheel_front_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_front_r_.cmd));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(wheel_front_l_.name, hardware_interface::HW_IF_VELOCITY, &wheel_front_l_.cmd));
+
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(wheel_rear_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_rear_r_.cmd));
+
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(wheel_front_r_.name, hardware_interface::HW_IF_VELOCITY, &wheel_front_r_.cmd));
 
     return command_interfaces;
   }
@@ -227,17 +233,32 @@ namespace diffdrive_arduino
         return hardware_interface::return_type::OK;
       }
       const auto velocity = root["vel"];
-      const auto position = root["pos"];
-
       wheel_front_r_.vel = velocity[0].asDouble();
       wheel_rear_r_.vel = velocity[1].asDouble();
       wheel_rear_l_.vel = velocity[2].asDouble();
       wheel_front_l_.vel = velocity[3].asDouble();
 
+      const auto position = root["pos"];
       wheel_front_r_.pos = position[0].asDouble();
       wheel_rear_r_.pos = position[1].asDouble();
       wheel_rear_l_.pos = position[2].asDouble();
       wheel_front_l_.pos = position[3].asDouble();
+
+      const auto orientation = root["ori"];
+      orientation_values_[0] = orientation[0].asDouble();
+      orientation_values_[1] = orientation[1].asDouble();
+      orientation_values_[2] = orientation[2].asDouble();
+      orientation_values_[3] = orientation[3].asDouble();
+
+      const auto gyroscope = root["gyr"];
+      angular_velocity_values_[0] = gyroscope[0].asDouble();
+      angular_velocity_values_[1] = gyroscope[1].asDouble();
+      angular_velocity_values_[2] = gyroscope[2].asDouble();
+
+      const auto acceleration = root["acc"];
+      linear_acceleration_values_[0] = acceleration[0].asDouble();
+      linear_acceleration_values_[1] = acceleration[1].asDouble();
+      linear_acceleration_values_[2] = acceleration[2].asDouble();
     }
     else
     {
@@ -273,4 +294,5 @@ namespace diffdrive_arduino
 
 #include "pluginlib/class_list_macros.hpp"
 PLUGINLIB_EXPORT_CLASS(
-    diffdrive_arduino::DiffDriveArduinoHardware, hardware_interface::SystemInterface)
+    diffdrive_arduino::DiffDriveArduinoHardware,
+    hardware_interface::SystemInterface)

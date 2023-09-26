@@ -23,6 +23,8 @@
 #include "hardware_interface/hardware_info.hpp"
 #include "hardware_interface/system_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
+#include "controller_interface/controller_interface.hpp"
+#include "semantic_components/imu_sensor.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/duration.hpp"
 #include "rclcpp/macros.hpp"
@@ -102,6 +104,18 @@ namespace diffdrive_arduino
     Wheel wheel_rear_r_;
     Wheel wheel_front_l_;
     Wheel wheel_front_r_;
+    double battery;
+
+    const size_t size_ = 10;
+    const std::string sensor_name_ = "mpu6050";
+    std::array<double, 4> orientation_values_ = {1.1, 2.2, 3.3, 4.4};
+    std::array<double, 3> angular_velocity_values_ = {4.4, 5.5, 6.6};
+    std::array<double, 3> linear_acceleration_values_ = {4.4, 5.5, 6.6};
+    // std::unique_ptr<TestableIMUSensor> imu_sensor_;
+    const std::vector<std::string> imu_interface_names_ = {
+        "orientation.x", "orientation.y", "orientation.z", "orientation.w",
+        "angular_velocity.x", "angular_velocity.y", "angular_velocity.z", "linear_acceleration.x",
+        "linear_acceleration.y", "linear_acceleration.z"};
   };
 
 } // namespace diffdrive_arduino
